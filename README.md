@@ -1,6 +1,5 @@
-# My Awesome Yew App
+# Rust + Yew + WASM Web App (this is built on top of the official template found here [Create Yew App](https://github.com/jetli/create-yew-app)
 
-This is the official base template for [Create Yew App](https://github.com/jetli/create-yew-app).
 
 ## How to install
 
