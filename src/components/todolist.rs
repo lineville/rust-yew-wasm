@@ -1,15 +1,20 @@
 use yew::prelude::*;
+use yew::services::storage::{Area, StorageService};
 use yew::{html, Component, ComponentLink, Html, ShouldRender};
 
-// * Todos
+pub struct Model {
+    link: ComponentLink<Self>,
+    storage: StorageService,
+    state: TodoList,
+}
+
 pub struct TodoList {
     input: String,
     edit_input: String,
     tasks: Vec<Task>,
-    link: ComponentLink<Self>,
 }
 
-struct Task {
+pub struct Task {
     description: String,
     starred: bool,
     edit: bool,
@@ -26,16 +31,21 @@ pub enum Message {
     Nothing,            // * No action
 }
 
-impl Component for TodoList {
+impl Component for Model {
     type Message = Message;
     type Properties = ();
 
     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-        TodoList {
+        let storage = StorageService::new(Area::Local).expect("storage was disabled by the user");
+        let tasks = TodoList {
             tasks: vec![],
             input: String::new(),
             edit_input: String::new(),
+        };
+        Model {
             link,
+            storage,
+            state: tasks,
         }
     }
 
@@ -43,36 +53,36 @@ impl Component for TodoList {
         match msg {
             Message::Add => {
                 let item = Task {
-                    description: self.input.clone(),
+                    description: self.state.input.clone(),
                     edit: false,
                     starred: false,
                 };
-                self.tasks.push(item);
-                self.input.clear();
+                self.state.tasks.push(item);
+                self.state.input.clear();
             }
             Message::Update(s) => {
-                self.input = s;
+                self.state.input = s;
             }
             Message::Remove(i) => {
-                self.tasks.remove(i);
+                self.state.tasks.remove(i);
             }
             Message::RemoveAll => {
-                self.tasks.clear();
+                self.state.tasks.clear();
             }
             Message::UpdateEdit(s) => {
-                self.edit_input = s;
+                self.state.edit_input = s;
             }
             Message::Edit(i) => {
                 let modified = Task {
-                    description: self.edit_input.clone(),
+                    description: self.state.edit_input.clone(),
                     edit: false,
-                    starred: self.tasks.get(i).unwrap().starred,
+                    starred: self.state.tasks.get(i).unwrap().starred,
                 };
-                self.tasks.remove(i);
-                self.tasks.push(modified);
+                self.state.tasks.remove(i);
+                self.state.tasks.push(modified);
             }
             Message::Toggle(i) => {
-                let task = self.tasks.get_mut(i).unwrap();
+                let task = self.state.tasks.get_mut(i).unwrap();
                 task.edit = !task.edit;
             }
             Message::Nothing => {}
@@ -92,7 +102,7 @@ impl Component for TodoList {
             // Input field
             <input type="text",
               placeholder="New Task",
-              value=&self.input,
+              value=&self.state.input,
               oninput=self.link.callback(|e: InputData| Message::Update(e.value)),
               onkeypress=self.link.callback(|e: KeyboardEvent| {
                 if e.key() == "Enter" {Message::Add} else {Message::Nothing}
@@ -102,9 +112,15 @@ impl Component for TodoList {
             </span>
             // List
             <ul>
-              { for self.tasks.iter().map(|task| html! { <li> { &task.description } </li> }) }
+              { for self.state.tasks.iter().map(|task| self.view_list_item(&task)) }
             </ul>
             </>
         }
+    }
+}
+
+impl Model {
+    fn view_list_item(&self, task: &Task) -> Html {
+        html! { <li> { &task.description } </li> }
     }
 }

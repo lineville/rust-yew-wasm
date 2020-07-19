@@ -1,4 +1,4 @@
-use crate::components::todolist::TodoList;
+use crate::components::todolist::Model;
 use yew::prelude::*;
 
 /// Home page
@@ -24,7 +24,7 @@ impl Component for Home {
         html! {
             <div class="app">
                 <header class="app-header">
-                    <TodoList />
+                    <Model />
                 </header>
             </div>
         }
